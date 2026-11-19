@@ -3,9 +3,26 @@ import fs from 'node:fs';
 import path from 'node:path';
 import test from 'node:test';
 import { spawn } from 'node:child_process';
-import { auditEngineeringPayload } from '../src/engine/sentinelEngine.js';
+import { auditEngineeringPayload, extractAdfText, stripHtmlToText } from '../src/engine/sentinelEngine.js';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
+
+test('extractAdfText and stripHtmlToText produce clean multi-line human-readable text without raw JSON/HTML noise', () => {
+  const adf = {
+    type: 'doc',
+    version: 1,
+    content: [
+      { type: 'paragraph', content: [{ type: 'text', text: 'AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE' }] },
+      { type: 'codeBlock', content: [{ type: 'text', text: '<uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />' }] }
+    ]
+  };
+  const extracted = extractAdfText(adf).trim();
+  assert.ok(!extracted.includes('"type":"doc"'));
+  assert.ok(extracted.includes('AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE'));
+  const html = '<p>Title</p><pre>&lt;uses-permission android:name=&quot;android.permission.INTERNET&quot; /&gt;</pre>';
+  const stripped = stripHtmlToText(html);
+  assert.ok(stripped.includes('<uses-permission android:name="android.permission.INTERNET" />'));
+});
 
 test('Atlassian Forge manifest.yml defines Jira, Confluence, Rovo Agent, Action, Trigger, and Node 22 runtime', () => {
   const manifest = fs.readFileSync(path.join(ROOT, 'manifest.yml'), 'utf8');

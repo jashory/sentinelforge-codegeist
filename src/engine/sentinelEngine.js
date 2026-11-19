@@ -138,3 +138,33 @@ export function auditEngineeringPayload(rawText) {
     thirdPartyCloudBytesSent: 0
   };
 }
+
+export function extractAdfText(node) {
+  if (!node) return '';
+  if (typeof node === 'string') return node;
+  if (node.type === 'text') return node.text || '';
+  if (node.type === 'hardBreak') return '\n';
+  if (Array.isArray(node.content)) {
+    const childTexts = node.content.map((child) => extractAdfText(child));
+    const blockTypes = new Set(['paragraph', 'heading', 'codeBlock', 'listItem', 'blockquote']);
+    const separator = blockTypes.has(node.type) ? '' : '\n';
+    const joined = childTexts.join(separator);
+    return blockTypes.has(node.type) ? `${joined}\n` : joined;
+  }
+  return '';
+}
+
+export function stripHtmlToText(html = '') {
+  return String(html || '')
+    .replace(/<\/(p|div|h[1-6]|li|tr|pre|blockquote)>/gi, '\n')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+

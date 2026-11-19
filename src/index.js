@@ -1,6 +1,6 @@
 import ResolverPkg from '@forge/resolver';
 import apiPkg, { route, storage } from '@forge/api';
-import { auditEngineeringPayload } from './engine/sentinelEngine.js';
+import { auditEngineeringPayload, extractAdfText, stripHtmlToText } from './engine/sentinelEngine.js';
 
 const Resolver = ResolverPkg?.default || ResolverPkg;
 const api = apiPkg?.default || apiPkg;
@@ -17,7 +17,8 @@ resolver.define('auditCurrentIssue', async ({ context, payload }) => {
       const resp = await api.asApp().requestJira(route`/rest/api/3/issue/${issueKey}?fields=summary,description`);
       if (resp.ok) {
         const data = await resp.json();
-        textToScan = `${data.fields?.summary || ''}\n${JSON.stringify(data.fields?.description || '')}`;
+        const cleanDesc = extractAdfText(data.fields?.description).trim();
+        textToScan = `${data.fields?.summary || ''}\n${cleanDesc}`;
       }
     } catch (_) {
       // Fallback to empty/sandbox scan safely
@@ -27,7 +28,8 @@ resolver.define('auditCurrentIssue', async ({ context, payload }) => {
       const resp = await api.asApp().requestConfluence(route`/wiki/api/v2/pages/${contentId}?body-format=storage`);
       if (resp.ok) {
         const data = await resp.json();
-        textToScan = `${data.title || ''}\n${data.body?.storage?.value || ''}`;
+        const cleanBody = stripHtmlToText(data.body?.storage?.value || '');
+        textToScan = `${data.title || ''}\n${cleanBody}`;
       }
     } catch (_) {
       // Fallback to empty/sandbox scan safely
@@ -59,7 +61,7 @@ export async function rovoActionHandler(payload) {
 export async function issueTriggerHandler(event) {
   const issueKey = event?.issue?.key;
   const summary = event?.issue?.fields?.summary || '';
-  const desc = JSON.stringify(event?.issue?.fields?.description || '');
+  const desc = extractAdfText(event?.issue?.fields?.description).trim();
   const report = auditEngineeringPayload(`${summary}\n${desc}`);
   if (issueKey) {
     await storage.set(`audit:${issueKey}`, {
