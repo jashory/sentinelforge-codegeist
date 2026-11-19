@@ -13,12 +13,16 @@ const App = () => {
   const [report, setReport] = useState(null);
   const [sandboxText, setSandboxText] = useState('');
   const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState('');
 
   const runAudit = async (manualText = '') => {
     setLoading(true);
+    setErrorMsg('');
     try {
       const res = await invoke('auditCurrentIssue', { manualText });
       setReport(res);
+    } catch (err) {
+      setErrorMsg(String(err?.message || err || 'Audit invocation failed'));
     } finally {
       setLoading(false);
     }
@@ -36,6 +40,12 @@ const App = () => {
       </Text>
 
       {loading && <Text>Running deterministic secret &amp; permission audit...</Text>}
+
+      {errorMsg && !loading && (
+        <SectionMessage title="Audit notice" appearance="warning">
+          <Text>{errorMsg}</Text>
+        </SectionMessage>
+      )}
 
       {report && !loading && (
         <SectionMessage

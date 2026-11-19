@@ -1,7 +1,9 @@
-import Resolver from '@forge/resolver';
-import api, { route, storage } from '@forge/api';
+import ResolverPkg from '@forge/resolver';
+import apiPkg, { route, storage } from '@forge/api';
 import { auditEngineeringPayload } from './engine/sentinelEngine.js';
 
+const Resolver = ResolverPkg?.default || ResolverPkg;
+const api = apiPkg?.default || apiPkg;
 const resolver = new Resolver();
 
 resolver.define('auditCurrentIssue', async ({ context, payload }) => {
