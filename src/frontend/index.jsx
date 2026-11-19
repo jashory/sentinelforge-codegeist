@@ -2,6 +2,13 @@ import React, { useEffect, useState } from 'react';
 import ForgeReconciler, { Badge, Box, Button, CodeBlock, Heading, SectionMessage, Stack, Text, TextArea } from '@forge/react';
 import { invoke } from '@forge/bridge';
 
+const SAMPLE_LEAK_PAYLOAD = `AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE
+GITHUB_TOKEN=ghp_1234567890abcdefghijklmnopqrstuvwxyz1234
+<uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+<uses-permission android:name="android.permission.ACCESS_MEDIA_LOCATION" />
+<uses-permission android:name="android.permission.RECORD_AUDIO" />
+<uses-permission android:name="android.permission.INTERNET" />`;
+
 const App = () => {
   const [report, setReport] = useState(null);
   const [sandboxText, setSandboxText] = useState('');
@@ -32,7 +39,7 @@ const App = () => {
 
       {report && !loading && (
         <SectionMessage
-          title={`Verdict: ${report.verdict} (Risk ${report.riskScore}/100 — ${report.totalFindings} findings)`}
+          title={`[${report.issueKey}] Verdict: ${report.verdict} (Risk ${report.riskScore}/100 — ${report.totalFindings} findings)`}
           appearance={report.riskScore >= 70 ? 'error' : report.riskScore >= 30 ? 'warning' : 'confirmation'}
         >
           <Stack space="space.100">
@@ -58,9 +65,20 @@ const App = () => {
         value={sandboxText}
         onChange={(e) => setSandboxText(e.target.value)}
       />
-      <Button appearance="primary" onClick={() => runAudit(sandboxText)}>
-        Run Zero-Leak Audit
-      </Button>
+      <Stack space="space.100">
+        <Button appearance="primary" onClick={() => runAudit(sandboxText)}>
+          Run Zero-Leak Audit
+        </Button>
+        <Button
+          appearance="subtle"
+          onClick={() => {
+            setSandboxText(SAMPLE_LEAK_PAYLOAD);
+            runAudit(SAMPLE_LEAK_PAYLOAD);
+          }}
+        >
+          Test Sample Secret &amp; Permission Leak
+        </Button>
+      </Stack>
     </Stack>
   );
 };

@@ -6,26 +6,45 @@ const resolver = new Resolver();
 
 resolver.define('auditCurrentIssue', async ({ context, payload }) => {
   const issueKey = context?.extension?.issue?.key || payload?.issueKey;
+  const contentId = context?.extension?.content?.id || payload?.contentId;
   let textToScan = payload?.manualText || '';
+  let targetLabel = issueKey || (contentId ? `CONFLUENCE-${contentId}` : 'MANUAL_SANDBOX');
 
   if (!textToScan && issueKey) {
-    const resp = await api.asApp().requestJira(route`/rest/api/3/issue/${issueKey}?fields=summary,description`);
-    if (resp.ok) {
-      const data = await resp.json();
-      textToScan = `${data.fields?.summary || ''}\n${JSON.stringify(data.fields?.description || '')}`;
+    try {
+      const resp = await api.asApp().requestJira(route`/rest/api/3/issue/${issueKey}?fields=summary,description`);
+      if (resp.ok) {
+        const data = await resp.json();
+        textToScan = `${data.fields?.summary || ''}\n${JSON.stringify(data.fields?.description || '')}`;
+      }
+    } catch (_) {
+      // Fallback to empty/sandbox scan safely
+    }
+  } else if (!textToScan && contentId) {
+    try {
+      const resp = await api.asApp().requestConfluence(route`/wiki/api/v2/pages/${contentId}?body-format=storage`);
+      if (resp.ok) {
+        const data = await resp.json();
+        textToScan = `${data.title || ''}\n${data.body?.storage?.value || ''}`;
+      }
+    } catch (_) {
+      // Fallback to empty/sandbox scan safely
     }
   }
 
   const report = auditEngineeringPayload(textToScan);
-  if (issueKey) {
-    await storage.set(`audit:${issueKey}`, {
-      auditedAt: new Date().toISOString(),
-      riskScore: report.riskScore,
-      verdict: report.verdict,
-      totalFindings: report.totalFindings
-    });
+  const storeKey = issueKey ? `audit:${issueKey}` : (contentId ? `audit:conf:${contentId}` : null);
+  if (storeKey) {
+    try {
+      await storage.set(storeKey, {
+        auditedAt: new Date().toISOString(),
+        riskScore: report.riskScore,
+        verdict: report.verdict,
+        totalFindings: report.totalFindings
+      });
+    } catch (_) {}
   }
-  return { issueKey: issueKey || 'MANUAL_SANDBOX', ...report };
+  return { issueKey: targetLabel, ...report };
 });
 
 export const handler = resolver.getDefinitions();
