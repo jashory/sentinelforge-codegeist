@@ -1,0 +1,17 @@
+{
+  "name": "sentinelforge-codegeist",
+  "version": "1.0.0",
+  "description": "SentinelForge MCP Guard — Zero-Leak Secret, Mobile Permission & Rovo Security Guardian for Atlassian Codegeist 2026",
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/sentinel.test.mjs"
+  },
+  "dependencies": {
+    "@forge/api": "^4.3.0",
+    "@forge/react": "^10.10.0",
+    "@forge/resolver": "^1.6.11"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

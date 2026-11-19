@@ -1,0 +1,79 @@
+modules:
+  jira:issuePanel:
+    - key: sentinelforge-jira-panel
+      resource: main-ui
+      resolver:
+        function: resolver
+      render: native
+      title: SentinelForge Zero-Leak & MCP Guard
+      icon: https://developer.atlassian.com/platform/forge/images/icons/issue-panel-icon.svg
+
+  confluence:contentBylineItem:
+    - key: sentinelforge-confluence-byline
+      resource: main-ui
+      resolver:
+        function: resolver
+      render: native
+      title: SentinelForge Privacy Audit
+      tooltip: Inspect Confluence page for leaked credentials and risky mobile permission manifests
+
+  rovo:agent:
+    - key: sentinelforge-security-agent
+      name: SentinelForge Security Guardian
+      description: Autonomous Zero-Leak Secret, Permission Chain & MCP Governance Agent for Jira and Confluence.
+      prompt: >
+        You are SentinelForge Security Guardian. Whenever an engineer asks you to audit a Jira ticket,
+        Confluence specification, or mobile AndroidManifest.xml, invoke the scan-content-security action
+        to detect leaked cloud credentials, Luhn-validated payment cards, high-entropy tokens, and silent
+        mobile data-harvesting permission chains. Never echo raw secrets back verbatim; always present
+        redacted placeholders and exact remediation steps.
+      conversationStarters:
+        - Audit this Jira issue for leaked AWS keys, tokens, or PII
+        - Check this AndroidManifest.xml for silent camera-roll harvesting chains
+        - Generate a zero-leak redacted version of this technical spec
+      actions:
+        - scan-content-security
+
+  action:
+    - key: scan-content-security
+      name: Scan Content Security
+      function: rovo-action-handler
+      actionVerb: GET
+      description: Scans text, config blocks, or AndroidManifest.xml payloads for leaked secrets and dangerous permission chains without transmitting data to third-party AI APIs.
+      inputs:
+        payload:
+          title: Text or Manifest Payload
+          type: string
+          required: true
+          description: Raw issue description, config snippet, or AndroidManifest.xml text to audit.
+
+  trigger:
+    - key: issue-leak-auto-watcher
+      function: issue-trigger-handler
+      events:
+        - avi:jira:created:issue
+        - avi:jira:updated:issue
+
+  function:
+    - key: resolver
+      handler: index.handler
+    - key: rovo-action-handler
+      handler: index.rovoActionHandler
+    - key: issue-trigger-handler
+      handler: index.issueTriggerHandler
+
+resources:
+  - key: main-ui
+    path: src/frontend/index.jsx
+
+permissions:
+  scopes:
+    - read:jira-work
+    - write:jira-work
+    - read:confluence-content.summary
+    - storage:app
+
+app:
+  runtime:
+    name: nodejs22.x
+  id: ari:cloud:ecosystem::app/sentinelforge-codegeist-placeholder
