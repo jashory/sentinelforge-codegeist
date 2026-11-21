@@ -1,9 +1,16 @@
-# Devpost Submission Draft — SentinelForge MCP Guard (Atlassian Codegeist 2026)
+# Devpost Submission Draft — SentinelForge MCP Guard v4.0 (Atlassian Codegeist 2026)
 
+- **Live Devpost Submission (`#1312524` — SUBMITTED LIVE Nov 20, 2026 | First-300 Swag Seat Locked | Edit Window Open Until Dec 22, 2026 12:00 PM PT):** https://devpost.com/software/sentinelforge-mcp-guard-zero-leak-forge-rovo-shield
+- **4 Confirmed Executive Teammates:** MD SHIHABUDDIN (`@shihabjessore7`), MD. RAFIUL ISLAM SHUBHO (`@mdrafiulislamshubho`), MD Anisur Rahman (`@director634`), Sharmin Kahnam (`@coo141`)
 - **Main Track:** Apps for Software Teams (1st: 15,000 USD, 2nd: 8,000 USD, 3rd: 5,000 USD)
-- **Bonus Tracks Selected:** **Best App with Atlassian MCP (6x 1,500 USD)** + **Best Agents — Rovo (6x 1,500 USD)** + **First-300 Eligible Submissions Atlassian Developer Swag Pack**
-- **Devpost Submission Draft (`#1312524` — Team: MD SHIHABUDDIN + MD Rafiul Islam Shubho):** https://devpost.com/software/sentinelforge-mcp-guard-zero-leak-forge-rovo-shield
-- **Public GitHub Repo:** https://github.com/jashory/sentinelforge-codegeist
-- **Forge App ID:** `ari:cloud:ecosystem::app/dfccfe85-2f0a-4c82-9c88-c1dcf76cd975` (Developer Space: `Vision-Flow-Lab` | Production `v2.1.0` | **Runs on Atlassian** Eligible)
-- **Live Shareable Forge Installation Link (Confluence & Jira):** https://developer.atlassian.com/console/install/dfccfe85-2f0a-4c82-9c88-c1dcf76cd975?signature=AYABePbekkFlQ6b9WGI1OSiyJ0QAAAADAAdhd3Mta21zAEthcm46YXdzOmttczp1cy13ZXN0LTI6NzA5NTg3ODM1MjQzOmtleS83MDVlZDY3MC1mNTdjLTQxYjUtOWY5Yi1lM2YyZGNjMTQ2ZTcAuAECAQB4CxqLTo9l4lqXuFjNim1xJM%2Bp%2F3TVP9xHS2BrU5DRRucB43xQ8z0a40vUy92qFrbZsgAAAH4wfAYJKoZIhvcNAQcGoG8wbQIBADBoBgkqhkiG9w0BBwEwHgYJYIZIAWUDBAEuMBEEDLmyoQqegXqdj1hpawIBEIA7KqL2Jq8dMqSVB%2BqLp%2BqmRoaoxpOLEOxAiir3VTO5e6sSe7s5CXVhfARMsp0c1HUiWcXegZaQ2afBrboAB2F3cy1rbXMAS2Fybjphd3M6a21zOmV1LXdlc3QtMTo3MDk1ODc4MzUyNDM6a2V5LzQ2MzBjZTZiLTAwYzMtNGRlMi04NzdiLTYyN2UyMDYwZTVjYwC4AQICAHi9bVMAkme4qVQX1fQHo6ePw3H40A7cGfz7yrmSfBWMXgEputGsmrOJAk%2FkRTqjeiMVAAAAfjB8BgkqhkiG9w0BBwagbzBtAgEAMGgGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMkH7QJyZwcmbpFIVEAgEQgDsHAfyZkW2%2BSGje9GoN3d5v8W%2FjjNH6AZqGtivmtT6mifu72SeLpu3P6CtQdUhCniy4BntFoD0iOIC1nQAHYXdzLWttcwBLYXJuOmF3czprbXM6dXMtZWFzdC0xOjcwOTU4NzgzNTI0MzprZXkvNmMxMjBiYTAtNGNkNS00OTg1LWI4MmUtNDBhMDQ5NTJjYzU3ALgBAgIAeDYASx0XCjkny4iLV6vz%2BKtEGSGT6kdt0QRpkn6D%2FlVEAZJijhliY2wtihwZxY0ZFg4AAAB%2BMHwGCSqGSIb3DQEHBqBvMG0CAQAwaAYJKoZIhvcNAQcBMB4GCWCGSAFlAwQBLjARBAw8KYxq%2BOBFrXk5KjwCARCAOxK9or6FQxcLuzPGYQeMECqtNv1j0ZC8u9P0W0GNJVp0yeYt4cHziLHW7O%2BxamFnPnnS13F8bky3lfspAgAAAAAMAAAQAAAAAAAAAAAAAAAAAA8CoSWxbm9PU%2FAeugafIKr%2F%2F%2F%2F%2FAAAAAQAAAAAAAAAAAAAAAQAAADKmrz4r0OlbNade63mGGcQ8%2BmBWZT52gLXtO2BiLddGvOS%2BzMxcIaxDSFaWaHJbr2SS6593QzevjjKDViMV9ET8N%2Bo%3D&product=confluence&product=jira
-- **Demo Video (<5 min YouTube):** [Parked for last phase before Dec 22 deadline — submit early to lock First-300 Swag Pack!]
+- **Bonus Tracks:** Best App with Atlassian MCP + Best Agents — Rovo + First-300 Atlassian Developer Swag Pack
+- **Public GitHub Repo (v4.0 Cloud CI Verified):** https://github.com/jashory/sentinelforge-codegeist
+- **Atlassian MCP Skill Contract:** `ATLASSIAN_MCP_SKILL.md` + 5-Tool stdio Gateway (`mcp-server/index.mjs`)
+- **Forge App ID:** `ari:cloud:ecosystem::app/dfccfe85-2f0a-4c82-9c88-c1dcf76cd975` (Developer Space: `Vision-Flow-Lab` | **Runs on Atlassian** Eligible — 0 External Egress)
+- **v4.0 Chief-Judge Upgrades Shipped in Repo (Ready for `forge deploy -e production` once Forge CLI token is authenticated):**
+  1. Layer 1 Indirect LLM Prompt-Injection, Zero-Width Smuggling & Covert Markdown Image Exfiltration Firewall
+  2. Layer 2 Enterprise DLP (Atlassian `ATATT3x...`, AWS, Stripe, Slack, GitHub, Luhn Cards, IBAN, NID/SSN, Shannon Entropy)
+  3. Layer 3 Universal Android 8–17 (`AndroidManifest.xml`) + Apple iOS (`Info.plist` / `PrivacyInfo.xcprivacy`) Mobile Privacy Spec Audit
+  4. Layer 4 Tamper-Evident SHA-256 Hash-Chained Audit Ledger in Atlassian Forge Storage + Dual Rovo Agent Actions (`scan-content-security` + `verify-audit-ledger`)
+  5. Built-In 1-Click Judge Red-Team Attack Replay Simulator inside Jira Issue Panel & Confluence Byline UI
+- **Demo Video v1 (Live):** https://youtu.be/CkZgg6szmmE (Upgraded Shihab Sir RVC v2 Master Video to replace before Dec 22 after review)
