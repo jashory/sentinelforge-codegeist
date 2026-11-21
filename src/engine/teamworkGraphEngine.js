@@ -64,7 +64,7 @@ export const TEAMWORK_GRAPH_DEMO_CONTEXT = {
 export function extractSafeGraphQueryTerms(auditReport) {
   const terms = new Set();
   for (const f of auditReport?.findings || []) {
-    if (f.category === 'SECRET_DLP') {
+    if (f.category === 'SECRET_LEAK' || f.category === 'SECRET_DLP') {
       if (f.type.includes('AWS')) terms.add('AKIA');
       else if (f.type.includes('GITHUB')) terms.add('ghp_');
       else if (f.type.includes('ATLASSIAN')) terms.add('ATATT');
@@ -72,7 +72,7 @@ export function extractSafeGraphQueryTerms(auditReport) {
       else terms.add('API_KEY');
     } else if (f.category === 'PROMPT_INJECTION') {
       terms.add('ignore previous instructions');
-    } else if (f.category === 'MOBILE_PRIVACY') {
+    } else if (f.category === 'PERMISSION_CHAIN' || f.category === 'IOS_PRIVACY_CHAIN' || f.category === 'MOBILE_PRIVACY') {
       terms.add('READ_MEDIA_IMAGES');
     }
   }
@@ -209,13 +209,13 @@ export function buildAutonomousRemediationPlan(originKey, auditReport, graphRepo
   const severity = (auditReport?.riskScore || 0) >= 75 ? 'Highest' : 'High';
 
   const checklist = [];
-  if (categories.includes('SECRET_DLP')) {
+  if (categories.includes('SECRET_LEAK') || categories.includes('SECRET_DLP')) {
     checklist.push('Revoke and rotate every exposed API token/key immediately in AWS IAM / Atlassian / Stripe.');
   }
   if (categories.includes('PROMPT_INJECTION')) {
     checklist.push('Quarantine untrusted ticket/page text before Rovo or MCP AI agents ingest issue context.');
   }
-  if (categories.includes('MOBILE_PRIVACY')) {
+  if (categories.includes('PERMISSION_CHAIN') || categories.includes('IOS_PRIVACY_CHAIN') || categories.includes('MOBILE_PRIVACY')) {
     checklist.push('Replace blanket gallery/mic permissions with Android Photo Picker & hardened iOS PrivacyInfo.xcprivacy.');
   }
   if ((graphReport?.confluencePagesImpacted || 0) > 0) {
