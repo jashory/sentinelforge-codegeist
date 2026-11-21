@@ -38,9 +38,9 @@ modules:
         4) Invoke verify-audit-ledger whenever asked to verify tamper-evident compliance.
         Never echo raw unredacted secrets back verbatim.
       conversationStarters:
-        - Audit this Jira issue and map its Teamwork Graph blast radius across Confluence
-        - Run autonomous remediation and open a Security Incident ticket for this leak
-        - Check this AndroidManifest.xml or iOS Info.plist for silent camera-roll harvesting chains
+        - Audit this Jira issue and map Teamwork Graph blast radius across Confluence
+        - Run autonomous remediation and open a Security Incident for this leak
+        - Check AndroidManifest.xml or iOS Info.plist for silent camera-roll chains
         - Verify the SHA-256 cryptographic audit ledger chain for zero tampering
       actions:
         - scan-content-security
@@ -62,7 +62,7 @@ modules:
           description: Raw issue description, Confluence page text, AndroidManifest.xml, or iOS Info.plist to audit.
     - key: map-teamwork-graph-blast-radius
       name: Map Teamwork Graph Blast Radius
-      function: rovo-graph-action-handler
+      function: rovo-graph-fn
       actionVerb: GET
       description: Traces cross-product leak propagation across Jira Issues, Confluence Pages, and linked workspace users using Atlassian Teamwork Graph context with 0 external egress.
       inputs:
@@ -78,7 +78,7 @@ modules:
           description: Optional text or snippet containing the suspected leak or prompt injection.
     - key: remediate-and-create-incident
       name: Remediate & Open Security Incident
-      function: rovo-remediate-action-handler
+      function: rovo-remediate-fn
       actionVerb: CREATE
       description: Autonomous remediation action that posts a zero-leak containment notice, creates a High-Priority Jira Security Incident ticket, and seals a SHA-256 receipt in Forge Storage.
       inputs:
@@ -94,7 +94,7 @@ modules:
           description: Optional payload summary to derive exact key-rotation & containment checklist.
     - key: verify-audit-ledger
       name: Verify SHA-256 Audit Ledger
-      function: rovo-ledger-action-handler
+      function: rovo-ledger-fn
       actionVerb: GET
       description: Cryptographically verifies SentinelForge's append-only SHA-256 hash-chained Forge Storage audit ledger and returns tamper-proof compliance status.
 
@@ -110,11 +110,11 @@ modules:
       handler: index.handler
     - key: rovo-action-handler
       handler: index.rovoActionHandler
-    - key: rovo-graph-action-handler
+    - key: rovo-graph-fn
       handler: index.rovoGraphActionHandler
-    - key: rovo-remediate-action-handler
+    - key: rovo-remediate-fn
       handler: index.rovoRemediateActionHandler
-    - key: rovo-ledger-action-handler
+    - key: rovo-ledger-fn
       handler: index.rovoLedgerActionHandler
     - key: issue-trigger-handler
       handler: index.issueTriggerHandler
