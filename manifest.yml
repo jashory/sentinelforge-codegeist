@@ -5,8 +5,16 @@ modules:
       resolver:
         function: resolver
       render: native
-      title: SentinelForge v4.0 Zero-Leak & MCP Guard
+      title: SentinelForge v5.0 — Teamwork Graph & Zero-Leak Guard
       icon: https://developer.atlassian.com/platform/forge/images/icons/issue-panel-icon.svg
+
+  jira:globalPage:
+    - key: sentinelforge-executive-dashboard
+      resource: dashboard-ui
+      resolver:
+        function: resolver
+      render: native
+      title: SentinelForge Security Dashboard
 
   confluence:contentBylineItem:
     - key: sentinelforge-confluence-byline
@@ -14,27 +22,30 @@ modules:
       resolver:
         function: resolver
       render: native
-      title: SentinelForge v4.0 Privacy & Prompt-Injection Audit
-      tooltip: Inspect Confluence page for indirect prompt injections, leaked credentials, and Android/iOS privacy risks
+      title: SentinelForge v5.0 Privacy & Teamwork Graph Audit
+      tooltip: Inspect Confluence page for indirect prompt injections, leaked credentials, Teamwork Graph blast radius, and mobile privacy risks
 
   rovo:agent:
     - key: sentinelforge-security-agent
       name: SentinelForge Guard
-      description: Autonomous 4-Layer Zero-Leak Secret, Indirect Prompt-Injection, Mobile Privacy & SHA-256 Ledger Guardian for Jira and Confluence.
+      description: Active Atlassian Teamwork Graph Security Guardian v5.0 — blocks prompt injections & leaked secrets, maps cross-product Jira/Confluence blast radius, triggers autonomous remediation tickets, and seals SHA-256 audit ledgers with 0 external egress.
       prompt: >
-        You are SentinelForge Security Guardian v4.0. Whenever an engineer asks you
-        to audit a Jira ticket, Confluence specification, AndroidManifest.xml, or Apple iOS
-        Info.plist, invoke the scan-content-security action to neutralize indirect LLM prompt
-        injections, leaked Atlassian/AWS/Stripe/GitHub tokens, Luhn payment cards, high-entropy
-        secrets, and silent mobile camera-roll harvesting chains. When asked to verify compliance
-        or tamper resistance, invoke verify-audit-ledger to check the SHA-256 hash-chained Forge
-        Storage ledger. Never echo raw secrets back verbatim.
+        You are SentinelForge Security Guardian v5.0 built with Atlassian Teamwork Graph context.
+        When an engineer asks you to audit a Jira ticket, Confluence spec, AndroidManifest.xml, or Apple iOS Info.plist:
+        1) Invoke scan-content-security to detect indirect LLM prompt injections, leaked Atlassian/AWS/Stripe/GitHub tokens, Luhn cards, and silent mobile privacy chains.
+        2) Invoke map-teamwork-graph-blast-radius to trace where the leaked credential or risky spec propagates across related Jira issues and Confluence pages.
+        3) Upon user approval or critical leak detection, invoke remediate-and-create-incident to post a redacted warning, open a High-Priority Security Incident ticket, and seal a SHA-256 receipt in Forge Storage.
+        4) Invoke verify-audit-ledger whenever asked to verify tamper-evident compliance.
+        Never echo raw unredacted secrets back verbatim.
       conversationStarters:
-        - Audit this Jira issue for indirect prompt injections, AWS keys, or PII
+        - Audit this Jira issue and map its Teamwork Graph blast radius across Confluence
+        - Run autonomous remediation and open a Security Incident ticket for this leak
         - Check this AndroidManifest.xml or iOS Info.plist for silent camera-roll harvesting chains
         - Verify the SHA-256 cryptographic audit ledger chain for zero tampering
       actions:
         - scan-content-security
+        - map-teamwork-graph-blast-radius
+        - remediate-and-create-incident
         - verify-audit-ledger
 
   action:
@@ -49,6 +60,38 @@ modules:
           type: string
           required: true
           description: Raw issue description, Confluence page text, AndroidManifest.xml, or iOS Info.plist to audit.
+    - key: map-teamwork-graph-blast-radius
+      name: Map Teamwork Graph Blast Radius
+      function: rovo-graph-action-handler
+      actionVerb: GET
+      description: Traces cross-product leak propagation across Jira Issues, Confluence Pages, and linked workspace users using Atlassian Teamwork Graph context with 0 external egress.
+      inputs:
+        issueKey:
+          title: Origin Jira Issue Key
+          type: string
+          required: true
+          description: Origin Jira issue key (e.g. KAN-1) to map cross-product exposure.
+        payload:
+          title: Suspected Leak Payload
+          type: string
+          required: false
+          description: Optional text or snippet containing the suspected leak or prompt injection.
+    - key: remediate-and-create-incident
+      name: Remediate & Open Security Incident
+      function: rovo-remediate-action-handler
+      actionVerb: CREATE
+      description: Autonomous remediation action that posts a zero-leak containment notice, creates a High-Priority Jira Security Incident ticket, and seals a SHA-256 receipt in Forge Storage.
+      inputs:
+        issueKey:
+          title: Affected Jira Issue Key
+          type: string
+          required: true
+          description: Jira issue key requiring containment and incident tracking.
+        payload:
+          title: Audited Payload
+          type: string
+          required: false
+          description: Optional payload summary to derive exact key-rotation & containment checklist.
     - key: verify-audit-ledger
       name: Verify SHA-256 Audit Ledger
       function: rovo-ledger-action-handler
@@ -67,6 +110,10 @@ modules:
       handler: index.handler
     - key: rovo-action-handler
       handler: index.rovoActionHandler
+    - key: rovo-graph-action-handler
+      handler: index.rovoGraphActionHandler
+    - key: rovo-remediate-action-handler
+      handler: index.rovoRemediateActionHandler
     - key: rovo-ledger-action-handler
       handler: index.rovoLedgerActionHandler
     - key: issue-trigger-handler
@@ -75,6 +122,8 @@ modules:
 resources:
   - key: main-ui
     path: src/frontend/index.jsx
+  - key: dashboard-ui
+    path: src/frontend/dashboard.jsx
 
 permissions:
   scopes:
@@ -82,6 +131,7 @@ permissions:
     - write:jira-work
     - read:confluence-content.summary
     - read:page:confluence
+    - search:confluence
     - storage:app
 
 app:

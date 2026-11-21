@@ -11,6 +11,11 @@ import {
   stripHtmlToText,
   verifyAuditLedgerChain
 } from '../src/engine/sentinelEngine.js';
+import {
+  buildAutonomousRemediationPlan,
+  buildTeamworkGraphBlastRadius,
+  extractSafeGraphQueryTerms
+} from '../src/engine/teamworkGraphEngine.js';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 
@@ -31,17 +36,23 @@ test('extractAdfText and stripHtmlToText produce clean multi-line human-readable
   assert.ok(stripped.includes('<uses-permission android:name="android.permission.INTERNET" />'));
 });
 
-test('Atlassian Forge manifest.yml & skill.md define Jira, Confluence, Rovo Agent, Dual Actions, Trigger & Zero Egress', () => {
+test('Atlassian Forge v5.0 manifest.yml declares Jira, Confluence, Executive Global Dashboard, 4 Rovo Actions & Zero Egress', () => {
   const manifest = fs.readFileSync(path.join(ROOT, 'manifest.yml'), 'utf8');
   assert.ok(manifest.includes('jira:issuePanel:'));
+  assert.ok(manifest.includes('jira:globalPage:'));
+  assert.ok(manifest.includes('sentinelforge-executive-dashboard'));
   assert.ok(manifest.includes('confluence:contentBylineItem:'));
   assert.ok(manifest.includes('rovo:agent:'));
   assert.ok(manifest.includes('scan-content-security'));
+  assert.ok(manifest.includes('map-teamwork-graph-blast-radius'));
+  assert.ok(manifest.includes('remediate-and-create-incident'));
   assert.ok(manifest.includes('verify-audit-ledger'));
+  assert.ok(manifest.includes('search:confluence'));
   assert.ok(manifest.includes('avi:jira:created:issue'));
   assert.ok(manifest.includes('nodejs22.x'));
   assert.ok(!manifest.includes('external:'), 'Runs on Atlassian: manifest must declare 0 external egress hosts');
   assert.ok(fs.existsSync(path.join(ROOT, 'ATLASSIAN_MCP_SKILL.md')), 'Open-source ATLASSIAN_MCP_SKILL.md contract must exist');
+  assert.ok(fs.existsSync(path.join(ROOT, 'src/frontend/dashboard.jsx')), 'Executive Visual Risk Dashboard UI must exist');
 });
 
 test('Layer 1 Firewall quarantines indirect LLM prompt injections, zero-width smuggling & Markdown image exfil', () => {
@@ -80,7 +91,6 @@ test('Layer 4 SHA-256 Hash-Chained Audit Ledger verifies intact chain and immedi
   assert.equal(okCheck.entriesVerified, 2);
   assert.equal(okCheck.headHash.length, 64);
 
-  // Tamper with entry #1 verdict and confirm cryptographic detection
   const tampered = JSON.parse(JSON.stringify(step2.ledger));
   tampered[0].verdict = 'TAMPERED_PASS';
   const badCheck = verifyAuditLedgerChain(tampered);
@@ -88,7 +98,34 @@ test('Layer 4 SHA-256 Hash-Chained Audit Ledger verifies intact chain and immedi
   assert.equal(badCheck.brokenAtSeq, 1);
 });
 
-test('Standalone v4.0 5-Tool Atlassian MCP Gateway handles initialize, tools/list, prompt firewall & red-team benchmark', async () => {
+test('v5.0 Teamwork Graph Blast-Radius & Autonomous Remediation correlate Jira + Confluence with 0 raw secret leaks', () => {
+  const leakPayload = RED_TEAM_SCENARIOS.find((s) => s.id === 'cloud-credential-card-leak').payload;
+  const report = auditEngineeringPayload(leakPayload);
+  const terms = extractSafeGraphQueryTerms(report);
+  assert.ok(terms.length >= 1, 'Safe search prefix tokens must be extracted without full raw keys');
+  assert.ok(terms.every((t) => !t.includes('AKIAIOSFODNN7EXAMPLE')), 'Graph query terms must never contain full secret values');
+
+  const graph = buildTeamworkGraphBlastRadius({
+    originKey: 'KAN-1',
+    auditReport: report,
+    useSandboxFallback: true
+  });
+  assert.equal(graph.protocol, 'SENTINELFORGE-TEAMWORK-GRAPH-V5');
+  assert.equal(graph.thirdPartyCloudBytesSent, 0);
+  assert.equal(graph.blastRadiusTier, 'ORG_CRITICAL');
+  assert.ok(graph.jiraTicketsImpacted >= 2);
+  assert.ok(graph.confluencePagesImpacted >= 2);
+  assert.ok(graph.totalNodesMapped >= 5);
+  assert.ok(graph.exposedUsersCount >= 3);
+
+  const plan = buildAutonomousRemediationPlan('KAN-1', report, graph);
+  assert.equal(plan.thirdPartyCloudBytesSent, 0);
+  assert.ok(plan.incidentSummary.includes('KAN-1'));
+  assert.ok(plan.remediationChecklist.length >= 2);
+  assert.ok(!plan.safeCommentMarkdown.includes('AKIAIOSFODNN7EXAMPLE'), 'Remediation comment must never echo raw secrets');
+});
+
+test('Standalone v4.0/v5.0 5-Tool Atlassian MCP Gateway handles initialize, tools/list, prompt firewall & red-team benchmark', async () => {
   const child = spawn(process.execPath, [path.join(ROOT, 'mcp-server/index.mjs')], {
     stdio: ['pipe', 'pipe', 'pipe']
   });
