@@ -2,7 +2,7 @@
 
 > **Atlassian Codegeist 2026 — "Build with Context" (`Runs on Atlassian` Eligible — 0 External Cloud Egress)**  
 > **Team:** Vision Flow Group (MD SHIHABUDDIN, MD Rafiul Islam Shubho, MD Anisur Rahman, Sharmin)  
-> **Live Forge App ID:** `ari:cloud:ecosystem::app/dfccfe85-2f0a-4c82-9c88-c1dcf76cd975` | **MCP Skill Contract:** [`ATLASSIAN_MCP_SKILL.md`](./ATLASSIAN_MCP_SKILL.md)
+> **Live Forge App ID:** `ari:cloud:ecosystem::app/dfccfe85-2f0a-4c82-9c88-c1dcf76cd975` | **Official Demo Video:** [https://youtu.be/mw0awiS9eP8](https://youtu.be/mw0awiS9eP8) | **MCP Skill Contract:** [`ATLASSIAN_MCP_SKILL.md`](./ATLASSIAN_MCP_SKILL.md)
 
 ## 1-Click Atlassian Forge Production Installation (For Codegeist Judges)
 SentinelForge v5.0 is deployed to **Atlassian Forge Production (`Version 4 — Sharing Enabled`)** and runs 100% natively on Atlassian (`0 B` third-party egress):
