@@ -268,9 +268,13 @@ resolver.define('getExecutiveDashboard', async () => {
   for (const item of ledger) {
     if ((item.riskScore || 0) >= 75) criticalCount += 1;
     if (item.verdict === 'REMEDIATED_AND_CONTAINED') remediatedCount += 1;
-    promptInjectionTotal += item.promptInjectionsBlocked || 0;
-    secretLeakTotal += item.secretsBlocked || 0;
-    mobileRiskTotal += item.mobileRisksBlocked || 0;
+    const ftypes = Array.isArray(item.findingTypes) ? item.findingTypes : [];
+    const piFallback = ftypes.filter((t) => /PROMPT|INJECTION|BIDI|UNICODE|EXFIL|OVERRIDE|HIJACK/i.test(t)).length;
+    const secFallback = ftypes.filter((t) => /AWS|STRIPE|GITHUB|ATLASSIAN|CARD|KEY|TOKEN|SECRET|JWT|SLACK|PII|CREDENTIAL/i.test(t)).length;
+    const mobFallback = ftypes.filter((t) => /ANDROID|IOS|MEDIA|CAMERA|LOCATION|PERMISSION|PRIVACY|ATS/i.test(t)).length;
+    promptInjectionTotal += item.promptInjectionsBlocked ?? piFallback;
+    secretLeakTotal += item.secretsBlocked ?? secFallback;
+    mobileRiskTotal += item.mobileRisksBlocked ?? mobFallback;
   }
 
   const sampleReport = auditEngineeringPayload(RED_TEAM_SCENARIOS[1].payload);

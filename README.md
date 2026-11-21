@@ -4,6 +4,18 @@
 > **Team:** Vision Flow Group (MD SHIHABUDDIN, MD Rafiul Islam Shubho, MD Anisur Rahman, Sharmin)  
 > **Live Forge App ID:** `ari:cloud:ecosystem::app/dfccfe85-2f0a-4c82-9c88-c1dcf76cd975` | **MCP Skill Contract:** [`ATLASSIAN_MCP_SKILL.md`](./ATLASSIAN_MCP_SKILL.md)
 
+## 1-Click Atlassian Forge Production Installation (For Codegeist Judges)
+SentinelForge v5.0 is deployed to **Atlassian Forge Production (`Version 4 — Sharing Enabled`)** and runs 100% natively on Atlassian (`0 B` third-party egress):
+- **[Install SentinelForge v5.0 on Jira & Confluence (Official Forge Sharing Link)](https://developer.atlassian.com/console/install/dfccfe85-2f0a-4c82-9c88-c1dcf76cd975?signature=AYABePbekkFlQ6b9WGI1OSiyJ0QAAAADAAdhd3Mta21zAEthcm46YXdzOmttczp1cy13ZXN0LTI6NzA5NTg3ODM1MjQzOmtleS83MDVlZDY3MC1mNTdjLTQxYjUtOWY5Yi1lM2YyZGNjMTQ2ZTcAuAECAQB4CxqLTo9l4lqXuFjNim1xJM%2Bp%2F3TVP9xHS2BrU5DRRucB43xQ8z0a40vUy92qFrbZsgAAAH4wfAYJKoZIhvcNAQcGoG8wbQIBADBoBgkqhkiG9w0BBwEwHgYJYIZIAWUDBAEuMBEEDLmyoQqegXqdj1hpawIBEIA7KqL2Jq8dMqSVB%2BqLp%2BqmRoaoxpOLEOxAiir3VTO5e6sSe7s5CXVhfARMsp0c1HUiWcXegZaQ2afBrboAB2F3cy1rbXMAS2Fybjphd3M6a21zOmV1LXdlc3QtMTo3MDk1ODc4MzUyNDM6a2V5LzQ2MzBjZTZiLTAwYzMtNGRlMi04NzdiLTYyN2UyMDYwZTVjYwC4AQICAHi9bVMAkme4qVQX1fQHo6ePw3H40A7cGfz7yrmSfBWMXgEputGsmrOJAk%2FkRTqjeiMVAAAAfjB8BgkqhkiG9w0BBwagbzBtAgEAMGgGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMkH7QJyZwcmbpFIVEAgEQgDsHAfyZkW2%2BSGje9GoN3d5v8W%2FjjNH6AZqGtivmtT6mifu72SeLpu3P6CtQdUhCniy4BntFoD0iOIC1nQAHYXdzLWttcwBLYXJuOmF3czprbXM6dXMtZWFzdC0xOjcwOTU4NzgzNTI0MzprZXkvNmMxMjBiYTAtNGNkNS00OTg1LWI4MmUtNDBhMDQ5NTJjYzU3ALgBAgIAeDYASx0XCjkny4iLV6vz%2BKtEGSGT6kdt0QRpkn6D%2FlVEAZJijhliY2wtihwZxY0ZFg4AAAB%2BMHwGCSqGSIb3DQEHBqBvMG0CAQAwaAYJKoZIhvcNAQcBMB4GCWCGSAFlAwQBLjARBAw8KYxq%2BOBFrXk5KjwCARCAOxK9or6FQxcLuzPGYQeMECqtNv1j0ZC8u9P0W0GNJVp0yeYt4cHziLHW7O%2BxamFnPnnS13F8bky3lfspAgAAAAAMAAAQAAAAAAAAAAAAAAAAAA8CoSWxbm9PU%2FAeugafIKr%2F%2F%2F%2F%2FAAAAAQAAAAAAAAAAAAAAAQAAADKmrz4r0OlbNade63mGGcQ8%2BmBWZT52gLXtO2BiLddGvOS%2BzMxcIaxDSFaWaHJbr2SS6593QzevjjKDViMV9ET8N%2Bo%3D&product=confluence&product=jira)**
+- Once installed on any Jira/Confluence Cloud site, open **Apps -> SentinelForge Security Dashboard** or open any Jira issue panel and click **Run Autonomous Rovo Remediation** or **Fire Cloud Key Leak** for 1-click zero-setup testing.
+
+## Live Production Screenshots (`jashory.atlassian.net`)
+| Jira Issue `KAN-1` Teamwork Graph (`v5.0`) | Jira Global Executive Security Dashboard (`v5.0`) |
+| :---: | :---: |
+| ![Jira KAN-1 v5.0](./screenshots/01_v5_live_jira_kan1_teamwork_graph.jpg) | ![Executive Dashboard v5.0](./screenshots/02_v5_live_jira_executive_dashboard.jpg) |
+| **1-Click Autonomous Rovo Containment (`KAN-2`)** | **Auto-Created Security Incident Ticket (`KAN-2`)** |
+| ![Auto Remediated](./screenshots/03_v5_live_auto_remediated_incident.jpg) | ![KAN-2 Ticket](./screenshots/04_v5_live_kan2_created_ticket.jpg) |
+
 ## Why SentinelForge v5.0 Solves "Build with Context"
 A leaked credential or indirect LLM prompt injection inside a single Jira issue rarely stays isolated. Engineers copy runbooks into Confluence, reference credentials in CI tickets, and expose Rovo or MCP AI agents across the entire workspace.
 
