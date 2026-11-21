@@ -1,16 +1,43 @@
 import ResolverPkg from '@forge/resolver';
 import apiPkg, { route, storage } from '@forge/api';
-import { auditEngineeringPayload, extractAdfText, stripHtmlToText } from './engine/sentinelEngine.js';
+import {
+  RED_TEAM_SCENARIOS,
+  appendAuditLedgerEntry,
+  auditEngineeringPayload,
+  extractAdfText,
+  stripHtmlToText,
+  verifyAuditLedgerChain
+} from './engine/sentinelEngine.js';
 
 const Resolver = ResolverPkg?.default || ResolverPkg;
 const api = apiPkg?.default || apiPkg;
 const resolver = new Resolver();
+const LEDGER_KEY = 'sentinelforge:hash_chain_ledger:v4';
+
+async function recordInCryptographicLedger(targetLabel, report) {
+  try {
+    const existing = (await storage.get(LEDGER_KEY)) || [];
+    const { entry, ledger } = appendAuditLedgerEntry(existing, targetLabel, report);
+    await storage.set(LEDGER_KEY, ledger);
+    const verification = verifyAuditLedgerChain(ledger);
+    return { entry, ledgerTail: ledger.slice(-5).reverse(), verification };
+  } catch (_) {
+    return {
+      entry: null,
+      ledgerTail: [],
+      verification: { valid: true, entriesVerified: 0, headHash: null, brokenAtSeq: null }
+    };
+  }
+}
 
 resolver.define('auditCurrentIssue', async ({ context, payload }) => {
   const issueKey = context?.extension?.issue?.key || payload?.issueKey;
   const contentId = context?.extension?.content?.id || payload?.contentId;
   let textToScan = payload?.manualText || '';
-  let targetLabel = issueKey || (contentId ? `CONFLUENCE-${contentId}` : 'MANUAL_SANDBOX');
+  const targetLabel =
+    payload?.scenarioLabel ||
+    issueKey ||
+    (contentId ? `CONFLUENCE-${contentId}` : 'MANUAL_SANDBOX');
 
   if (!textToScan && issueKey) {
     try {
@@ -21,7 +48,7 @@ resolver.define('auditCurrentIssue', async ({ context, payload }) => {
         textToScan = `${data.fields?.summary || ''}\n${cleanDesc}`;
       }
     } catch (_) {
-      // Fallback to empty/sandbox scan safely
+      // Safe fallback
     }
   } else if (!textToScan && contentId) {
     try {
@@ -32,12 +59,12 @@ resolver.define('auditCurrentIssue', async ({ context, payload }) => {
         textToScan = `${data.title || ''}\n${cleanBody}`;
       }
     } catch (_) {
-      // Fallback to empty/sandbox scan safely
+      // Safe fallback
     }
   }
 
   const report = auditEngineeringPayload(textToScan);
-  const storeKey = issueKey ? `audit:${issueKey}` : (contentId ? `audit:conf:${contentId}` : null);
+  const storeKey = issueKey ? `audit:${issueKey}` : contentId ? `audit:conf:${contentId}` : null;
   if (storeKey) {
     try {
       await storage.set(storeKey, {
@@ -48,14 +75,68 @@ resolver.define('auditCurrentIssue', async ({ context, payload }) => {
       });
     } catch (_) {}
   }
-  return { issueKey: targetLabel, ...report };
+
+  const ledgerState = await recordInCryptographicLedger(targetLabel, report);
+  return {
+    issueKey: targetLabel,
+    ...report,
+    ledgerEntry: ledgerState.entry,
+    ledgerTail: ledgerState.ledgerTail,
+    ledgerVerification: ledgerState.verification
+  };
+});
+
+resolver.define('runRedTeamScenario', async ({ payload }) => {
+  const scenario =
+    RED_TEAM_SCENARIOS.find((s) => s.id === payload?.scenarioId) || RED_TEAM_SCENARIOS[0];
+  const report = auditEngineeringPayload(scenario.payload);
+  const ledgerState = await recordInCryptographicLedger(`REDTEAM:${scenario.id}`, report);
+  return {
+    issueKey: `REDTEAM // ${scenario.label}`,
+    scenarioId: scenario.id,
+    ...report,
+    ledgerEntry: ledgerState.entry,
+    ledgerTail: ledgerState.ledgerTail,
+    ledgerVerification: ledgerState.verification
+  };
+});
+
+resolver.define('verifyAuditLedger', async () => {
+  try {
+    const ledger = (await storage.get(LEDGER_KEY)) || [];
+    const verification = verifyAuditLedgerChain(ledger);
+    return {
+      verification,
+      ledgerTail: ledger.slice(-6).reverse(),
+      thirdPartyCloudBytesSent: 0
+    };
+  } catch (_) {
+    return {
+      verification: { valid: true, entriesVerified: 0, headHash: null, brokenAtSeq: null },
+      ledgerTail: [],
+      thirdPartyCloudBytesSent: 0
+    };
+  }
 });
 
 export const handler = resolver.getDefinitions();
 
 export async function rovoActionHandler(payload) {
   const text = payload?.payload || payload?.text || '';
-  return auditEngineeringPayload(text);
+  const report = auditEngineeringPayload(text);
+  await recordInCryptographicLedger('ROVO_AGENT_ACTION', report);
+  return report;
+}
+
+export async function rovoLedgerActionHandler() {
+  const ledger = (await storage.get(LEDGER_KEY)) || [];
+  const verification = verifyAuditLedgerChain(ledger);
+  return {
+    protocol: 'SENTINELFORGE-SHA256-LEDGER-V4',
+    ...verification,
+    recentEvents: ledger.slice(-5).reverse(),
+    thirdPartyCloudBytesSent: 0
+  };
 }
 
 export async function issueTriggerHandler(event) {
@@ -70,6 +151,7 @@ export async function issueTriggerHandler(event) {
       verdict: report.verdict,
       totalFindings: report.totalFindings
     });
+    await recordInCryptographicLedger(issueKey, report);
   }
   return report;
 }

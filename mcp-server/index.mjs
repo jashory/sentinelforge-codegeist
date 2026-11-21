@@ -1,35 +1,70 @@
 #!/usr/bin/env node
 /**
- * SentinelForge Atlassian-Compatible Local MCP Server (JSON-RPC 2.0 over stdio)
- * Enables AI coding agents & Atlassian MCP workflows to audit Jira tickets, Confluence specs,
- * and mobile manifests before pushing to team workspaces.
+ * SentinelForge v4.0 Atlassian-Compatible Local MCP Security Gateway (JSON-RPC 2.0 over stdio)
+ * Enables AI coding agents (Kiro, Claude, Rovo, Cursor) & Atlassian MCP workflows to neutralize
+ * indirect prompt injections, scrub leaked Atlassian/AWS/Stripe/GitHub tokens, audit Android 8-17
+ * & Apple iOS manifests, and verify SHA-256 hash-chained audit ledgers with 0 external egress.
  */
 
 import readline from 'node:readline';
-import { auditEngineeringPayload } from '../src/engine/sentinelEngine.js';
+import {
+  RED_TEAM_SCENARIOS,
+  auditEngineeringPayload,
+  verifyAuditLedgerChain
+} from '../src/engine/sentinelEngine.js';
 
 const TOOLS = [
   {
     name: 'sentinel_audit_jira_payload',
-    description: 'Audit a Jira ticket, PR description, or Confluence document for leaked Atlassian/AWS/GitHub tokens, payment cards, and dangerous Android permissions with 0 third-party cloud egress.',
+    description: '4-layer audit of a Jira ticket, PR description, or Confluence document for indirect LLM prompt injections, Atlassian/AWS/Stripe/GitHub tokens, Luhn cards, and Android 8-17 / iOS privacy risks (0 external egress).',
     inputSchema: {
       type: 'object',
       properties: {
-        issueKey: { type: 'string', description: 'Optional Jira issue key (e.g., SEC-104)' },
-        content: { type: 'string', description: 'Raw ticket, spec, or manifest text' }
+        issueKey: { type: 'string', description: 'Optional Jira issue key (e.g., KAN-1)' },
+        content: { type: 'string', description: 'Raw ticket, spec, AndroidManifest.xml, or iOS Info.plist text' }
       },
       required: ['content']
     }
   },
   {
     name: 'sentinel_redact_before_confluence',
-    description: 'Return a clean air-gapped version of sensitive engineering docs safe to publish in Confluence or pass to Rovo Agents.',
+    description: 'Return a sanitized, prompt-injection-quarantined version of sensitive engineering docs safe to publish in Confluence or pass to Rovo Agents.',
     inputSchema: {
       type: 'object',
       properties: {
         content: { type: 'string', description: 'Raw engineering document text' }
       },
       required: ['content']
+    }
+  },
+  {
+    name: 'sentinel_firewall_prompt_injection',
+    description: 'Dedicated pre-LLM indirect prompt-injection & covert Markdown image exfiltration firewall for Atlassian MCP & Rovo agent pipelines.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        untrustedText: { type: 'string', description: 'Untrusted Jira comment, Confluence page, or ticket text before feeding to an LLM' }
+      },
+      required: ['untrustedText']
+    }
+  },
+  {
+    name: 'sentinel_verify_ledger_chain',
+    description: 'Cryptographically verify an exported SentinelForge SHA-256 hash-chained audit ledger for zero tampering.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        ledger: { type: 'array', description: 'Array of SHA-256 chained audit ledger entries' }
+      },
+      required: ['ledger']
+    }
+  },
+  {
+    name: 'sentinel_run_red_team_benchmark',
+    description: 'Execute all 4 built-in SentinelForge v4.0 Red-Team attack probes locally and return deterministic pass/fail telemetry.',
+    inputSchema: {
+      type: 'object',
+      properties: {}
     }
   }
 ];
@@ -48,7 +83,7 @@ function handle(msg) {
     return reply(id, {
       protocolVersion: '2024-11-05',
       capabilities: { tools: {} },
-      serverInfo: { name: 'sentinelforge-atlassian-mcp', version: '1.0.0' }
+      serverInfo: { name: 'sentinelforge-atlassian-mcp', version: '4.0.0' }
     });
   }
   if (method === 'notifications/initialized') return;
@@ -56,18 +91,46 @@ function handle(msg) {
   if (method === 'tools/call') {
     const name = params?.name;
     const args = params?.arguments || {};
+    let out;
     if (name === 'sentinel_audit_jira_payload' || name === 'sentinel_redact_before_confluence') {
-      const result = auditEngineeringPayload(args.content || '');
-      return reply(id, {
-        content: [
-          {
-            type: 'text',
-            text: JSON.stringify({ issueKey: args.issueKey || null, ...result }, null, 2)
-          }
-        ]
-      });
+      out = { issueKey: args.issueKey || null, ...auditEngineeringPayload(args.content || '') };
+    } else if (name === 'sentinel_firewall_prompt_injection') {
+      const full = auditEngineeringPayload(args.untrustedText || '');
+      out = {
+        safeForLlm: full.promptInjectionsBlocked === 0 && full.secretsBlocked === 0,
+        promptInjectionsBlocked: full.promptInjectionsBlocked,
+        secretsBlocked: full.secretsBlocked,
+        verdict: full.verdict,
+        sanitizedPromptContext: full.redactedPayload,
+        payloadSha256: full.payloadSha256,
+        thirdPartyCloudBytesSent: 0
+      };
+    } else if (name === 'sentinel_verify_ledger_chain') {
+      out = { ...verifyAuditLedgerChain(args.ledger || []), thirdPartyCloudBytesSent: 0 };
+    } else if (name === 'sentinel_run_red_team_benchmark') {
+      out = {
+        protocol: 'SENTINELFORGE-REDTEAM-V4',
+        results: RED_TEAM_SCENARIOS.map((s) => {
+          const r = auditEngineeringPayload(s.payload);
+          return {
+            id: s.id,
+            label: s.label,
+            verdict: r.verdict,
+            riskScore: r.riskScore,
+            totalFindings: r.totalFindings,
+            promptInjectionsBlocked: r.promptInjectionsBlocked,
+            secretsBlocked: r.secretsBlocked,
+            mobileRisksBlocked: r.mobileRisksBlocked
+          };
+        }),
+        thirdPartyCloudBytesSent: 0
+      };
+    } else {
+      return fail(id, -32601, `Unknown tool: ${name}`);
     }
-    return fail(id, -32601, `Unknown tool: ${name}`);
+    return reply(id, {
+      content: [{ type: 'text', text: JSON.stringify(out, null, 2) }]
+    });
   }
   if (id !== undefined) return fail(id, -32601, `Unsupported method: ${method}`);
 }
@@ -76,9 +139,10 @@ const isMain = process.argv[1] && import.meta.url.endsWith(process.argv[1].repla
 if (isMain) {
   const rl = readline.createInterface({ input: process.stdin, terminal: false });
   rl.on('line', (line) => {
-    if (!line.trim()) return;
+    const trimmed = line.trim();
+    if (!trimmed) return;
     try {
-      handle(JSON.parse(line));
+      handle(JSON.parse(trimmed));
     } catch {
       fail(null, -32700, 'Invalid JSON');
     }

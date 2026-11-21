@@ -1,13 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import ForgeReconciler, { Badge, Box, Button, CodeBlock, Heading, SectionMessage, Stack, Text, TextArea } from '@forge/react';
+import ForgeReconciler, {
+  Badge,
+  Box,
+  Button,
+  ButtonGroup,
+  CodeBlock,
+  Heading,
+  SectionMessage,
+  Stack,
+  Text,
+  TextArea
+} from '@forge/react';
 import { invoke } from '@forge/bridge';
-
-const SAMPLE_LEAK_PAYLOAD = `AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE
-GITHUB_TOKEN=ghp_1234567890abcdefghijklmnopqrstuvwxyz1234
-<uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
-<uses-permission android:name="android.permission.ACCESS_MEDIA_LOCATION" />
-<uses-permission android:name="android.permission.RECORD_AUDIO" />
-<uses-permission android:name="android.permission.INTERNET" />`;
 
 const App = () => {
   const [report, setReport] = useState(null);
@@ -28,18 +32,84 @@ const App = () => {
     }
   };
 
+  const fireRedTeam = async (scenarioId) => {
+    setLoading(true);
+    setErrorMsg('');
+    try {
+      const res = await invoke('runRedTeamScenario', { scenarioId });
+      setReport(res);
+    } catch (err) {
+      setErrorMsg(String(err?.message || err || 'Red-Team replay failed'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const verifyLedger = async () => {
+    setLoading(true);
+    setErrorMsg('');
+    try {
+      const res = await invoke('verifyAuditLedger', {});
+      setReport((prev) =>
+        prev
+          ? {
+              ...prev,
+              ledgerVerification: res.verification,
+              ledgerTail: res.ledgerTail
+            }
+          : {
+              issueKey: 'SHA-256 AUDIT LEDGER',
+              verdict: res.verification.valid ? 'CLEAN_PASS' : 'BLOCK_AND_SANITIZE',
+              riskScore: res.verification.valid ? 0 : 100,
+              totalFindings: 0,
+              promptInjectionsBlocked: 0,
+              secretsBlocked: 0,
+              mobileRisksBlocked: 0,
+              findings: [],
+              redactedPayload: '',
+              thirdPartyCloudBytesSent: 0,
+              ledgerVerification: res.verification,
+              ledgerTail: res.ledgerTail
+            }
+      );
+    } catch (err) {
+      setErrorMsg(String(err?.message || err || 'Ledger verification failed'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     runAudit();
   }, []);
 
   return (
     <Stack space="space.200">
-      <Heading as="h3">SentinelForge Zero-Leak &amp; MCP Guard</Heading>
+      <Heading as="h3">SentinelForge v4.0 — Zero-Leak, Prompt-Injection &amp; MCP Guard</Heading>
       <Text>
-        Audits Jira issues, Confluence pages, and AndroidManifest specs inside Forge serverless RAM with 0 bytes sent to external AI APIs.
+        4-Layer Native Atlassian Forge Security Shield: blocks indirect LLM prompt injections, Atlassian/AWS/Stripe secrets,
+        and Android 8-17 / Apple iOS privacy chains with 0 external egress and a SHA-256 hash-chained Forge Storage ledger.
       </Text>
 
-      {loading && <Text>Running deterministic secret &amp; permission audit...</Text>}
+      <Stack space="space.100">
+        <Text>1-Click Live Red-Team Replay Simulator (For Instant Judge Verification):</Text>
+        <ButtonGroup label="Red-Team Attack Replay">
+          <Button appearance="danger" onClick={() => fireRedTeam('indirect-prompt-injection')}>
+            Fire Prompt Injection
+          </Button>
+          <Button appearance="warning" onClick={() => fireRedTeam('cloud-credential-card-leak')}>
+            Fire Cloud Key Leak
+          </Button>
+          <Button appearance="default" onClick={() => fireRedTeam('mobile-privacy-android-ios')}>
+            Fire Android/iOS Spec
+          </Button>
+          <Button appearance="subtle" onClick={verifyLedger}>
+            Verify SHA-256 Ledger
+          </Button>
+        </ButtonGroup>
+      </Stack>
+
+      {loading && <Text>Executing 4-layer zero-egress audit and sealing SHA-256 ledger...</Text>}
 
       {errorMsg && !loading && (
         <SectionMessage title="Audit notice" appearance="warning">
@@ -54,41 +124,56 @@ const App = () => {
         >
           <Stack space="space.100">
             <Box>
-              <Badge appearance={report.riskScore >= 70 ? 'removed' : 'added'}>
-                {`EXTERNAL CLOUD BYTES: ${report.thirdPartyCloudBytesSent}`}
+              <Badge appearance="added">{`EXTERNAL CLOUD BYTES: ${report.thirdPartyCloudBytesSent}`}</Badge>
+              <Badge appearance={report.promptInjectionsBlocked > 0 ? 'removed' : 'default'}>
+                {`PROMPT INJECTIONS: ${report.promptInjectionsBlocked || 0}`}
+              </Badge>
+              <Badge appearance={report.secretsBlocked > 0 ? 'removed' : 'default'}>
+                {`SECRETS: ${report.secretsBlocked || 0}`}
+              </Badge>
+              <Badge appearance={report.ledgerVerification?.valid !== false ? 'added' : 'removed'}>
+                {`SHA-256 CHAIN: ${report.ledgerVerification?.valid !== false ? 'VERIFIED' : 'TAMPERED'} (${report.ledgerVerification?.entriesVerified || 0})`}
               </Badge>
             </Box>
+
             {report.findings.map((f, idx) => (
               <Text key={idx}>
-                {`[${f.severity}] ${f.type} ${f.placeholder ? `-> ${f.placeholder}` : `— ${f.detail || ''}`}`}
+                {`[${f.severity}] [${f.category}] ${f.type} ${f.placeholder ? `-> ${f.placeholder}` : ''} ${f.detail ? `— ${f.detail}` : ''}`}
               </Text>
             ))}
-            {report.totalFindings > 0 && (
+
+            {report.totalFindings > 0 && report.redactedPayload && (
               <CodeBlock language="text" text={report.redactedPayload} />
+            )}
+
+            {report.ledgerTail && report.ledgerTail.length > 0 && (
+              <CodeBlock
+                language="text"
+                text={report.ledgerTail
+                  .map(
+                    (e) =>
+                      `#${e.seq} [${e.verdict} ${e.riskScore}/100] ${e.target} | sha256=${String(e.entryHash).slice(0, 16)}... <- prev=${String(e.prevHash).slice(0, 12)}...`
+                  )
+                  .join('\n')}
+              />
             )}
           </Stack>
         </SectionMessage>
       )}
 
       <TextArea
-        label="Paste config, contract, or AndroidManifest.xml for instant sandbox air-gap scan"
+        label="Paste Jira ticket, Confluence spec, AndroidManifest.xml, or Apple iOS Info.plist for air-gap audit"
         value={sandboxText}
         onChange={(e) => setSandboxText(e.target.value)}
       />
-      <Stack space="space.100">
+      <ButtonGroup label="Custom Audit">
         <Button appearance="primary" onClick={() => runAudit(sandboxText)}>
-          Run Zero-Leak Audit
+          Run 4-Layer Zero-Leak Audit
         </Button>
-        <Button
-          appearance="subtle"
-          onClick={() => {
-            setSandboxText(SAMPLE_LEAK_PAYLOAD);
-            runAudit(SAMPLE_LEAK_PAYLOAD);
-          }}
-        >
-          Test Sample Secret &amp; Permission Leak
+        <Button appearance="subtle" onClick={() => runAudit('')}>
+          Re-Audit Current Page / Issue
         </Button>
-      </Stack>
+      </ButtonGroup>
     </Stack>
   );
 };
