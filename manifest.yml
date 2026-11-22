@@ -5,7 +5,7 @@ modules:
       resolver:
         function: resolver
       render: native
-      title: SentinelForge v5.0 — Teamwork Graph & Zero-Leak Guard
+      title: SentinelForge v5.1 — Teamwork Graph & Zero-Leak Guard
       icon: https://developer.atlassian.com/platform/forge/images/icons/issue-panel-icon.svg
 
   jira:globalPage:
@@ -22,15 +22,15 @@ modules:
       resolver:
         function: resolver
       render: native
-      title: SentinelForge v5.0 Privacy & Teamwork Graph Audit
+      title: SentinelForge v5.1 Privacy & Teamwork Graph Audit
       tooltip: Inspect Confluence page for indirect prompt injections, leaked credentials, Teamwork Graph blast radius, and mobile privacy risks
 
   rovo:agent:
     - key: sentinelforge-security-agent
       name: SentinelForge Guard
-      description: Active Atlassian Teamwork Graph Security Guardian v5.0 — blocks prompt injections & leaked secrets, maps cross-product Jira/Confluence blast radius, triggers autonomous remediation tickets, and seals SHA-256 audit ledgers with 0 external egress.
+      description: Active Atlassian Teamwork Graph Security Guardian v5.1 — blocks prompt injections & leaked cloud/AI secrets, maps cross-product Jira/Confluence blast radius, triggers autonomous remediation tickets, and seals SHA-256 audit ledgers with 0 external egress.
       prompt: >
-        You are SentinelForge Security Guardian v5.0 built with Atlassian Teamwork Graph context.
+        You are SentinelForge Security Guardian v5.1 built with Atlassian Teamwork Graph context.
         When an engineer asks you to audit a Jira ticket, Confluence spec, AndroidManifest.xml, or Apple iOS Info.plist:
         1) Invoke scan-content-security to detect indirect LLM prompt injections, leaked Atlassian/AWS/Stripe/GitHub tokens, Luhn cards, and silent mobile privacy chains.
         2) Invoke map-teamwork-graph-blast-radius to trace where the leaked credential or risky spec propagates across related Jira issues and Confluence pages.
