@@ -66,6 +66,9 @@ export function extractSafeGraphQueryTerms(auditReport) {
   for (const f of auditReport?.findings || []) {
     if (f.category === 'SECRET_LEAK' || f.category === 'SECRET_DLP') {
       if (f.type.includes('AWS')) terms.add('AKIA');
+      else if (f.type.includes('GOOGLE') || f.type.includes('FIREBASE')) terms.add('AIza');
+      else if (f.type.includes('OPENAI') || f.type.includes('ANTHROPIC')) terms.add('sk-');
+      else if (f.type.includes('HUGGINGFACE')) terms.add('hf_');
       else if (f.type.includes('GITHUB')) terms.add('ghp_');
       else if (f.type.includes('ATLASSIAN')) terms.add('ATATT');
       else if (f.type.includes('STRIPE')) terms.add('sk_live');

@@ -19,9 +19,10 @@
 6. **Tamper-Evident Compliance Proof:**
    - Invoke `verify-audit-ledger` (Rovo Action) or `sentinel_verify_ledger_chain` (MCP) to verify the append-only SHA-256 hash-chained Forge Storage audit ledger (`prevHash -> entryHash`).
 
-## Exposed 5-Tool MCP Gateway (`mcp-server/index.mjs`)
+## Exposed 6-Tool MCP Gateway (`mcp-server/index.mjs`)
 1. `sentinel_audit_jira_payload` — 4-Layer Prompt Injection + Secret DLP + Android 8–17 / iOS Audit (`0 B` external egress)
 2. `sentinel_redact_before_confluence` — Air-Gapped Pre-Publish Document Sanitizer (`0 B` external egress)
 3. `sentinel_firewall_prompt_injection` — Pre-LLM Indirect Prompt-Injection, Zero-Width & Markdown Exfil Firewall (`0 B` external egress)
 4. `sentinel_verify_ledger_chain` — Cryptographic SHA-256 Audit Ledger Tamper Verifier (`0 B` external egress)
 5. `sentinel_run_red_team_benchmark` — 4-Attack Deterministic Red-Team Verification Suite (`0 B` external egress)
+6. `sentinel_prepush_git_guard` — Pre-Commit / Pre-Push Git Bundle Secret & Private-SPA Leak Blocker + Auto-Healer (`0 B` external egress)

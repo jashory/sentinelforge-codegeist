@@ -9,6 +9,7 @@
 import readline from 'node:readline';
 import {
   RED_TEAM_SCENARIOS,
+  auditAndHealGitBundle,
   auditEngineeringPayload,
   verifyAuditLedgerChain
 } from '../src/engine/sentinelEngine.js';
@@ -61,10 +62,28 @@ const TOOLS = [
   },
   {
     name: 'sentinel_run_red_team_benchmark',
-    description: 'Execute all 4 built-in SentinelForge v4.0 Red-Team attack probes locally and return deterministic pass/fail telemetry.',
+    description: 'Execute all 4 built-in SentinelForge v5.1 Red-Team attack probes locally and return deterministic pass/fail telemetry.',
     inputSchema: {
       type: 'object',
       properties: {}
+    }
+  },
+  {
+    name: 'sentinel_prepush_git_guard',
+    description: 'Pre-commit / pre-push git bundle firewall and auto-healer: intercepts Google/Firebase (AIza...), OpenAI/Anthropic (sk-...), HuggingFace (hf_...), AWS, GitHub, Atlassian keys, and private-to-public SPA index.html overwrites before git push and returns auto-healed files.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        files: {
+          type: 'object',
+          description: 'Map of relative file paths to raw file contents staged for commit or push'
+        },
+        isPublicRepo: {
+          type: 'boolean',
+          description: 'Whether the target repository is public (defaults to true)'
+        }
+      },
+      required: ['files']
     }
   }
 ];
@@ -125,6 +144,10 @@ function handle(msg) {
         }),
         thirdPartyCloudBytesSent: 0
       };
+    } else if (name === 'sentinel_prepush_git_guard') {
+      out = auditAndHealGitBundle(args.files || {}, {
+        isPublicRepo: args.isPublicRepo !== false
+      });
     } else {
       return fail(id, -32601, `Unknown tool: ${name}`);
     }

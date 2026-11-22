@@ -130,11 +130,15 @@ export function auditEngineeringPayload(rawText) {
   // Layer 2: Enterprise Credentials, Atlassian Tokens, Financial & Shannon-Entropy DLP
   const secretPatterns = [
     { type: 'PRIVATE_KEY_BLOCK', severity: 'CRITICAL', regex: /-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?-----END [A-Z ]*PRIVATE KEY-----/g },
+    { type: 'GOOGLE_FIREBASE_API_KEY', severity: 'CRITICAL', regex: /\bAIza[0-9A-Za-z_-]{35}\b/g },
+    { type: 'OPENAI_ANTHROPIC_KEY', severity: 'CRITICAL', regex: /\bsk-(?:proj-|ant-|live_|test_)?[A-Za-z0-9_-]{20,}\b/g },
+    { type: 'HUGGINGFACE_TOKEN', severity: 'CRITICAL', regex: /\bhf_[A-Za-z0-9]{20,}\b/g },
     { type: 'AWS_ACCESS_KEY', severity: 'CRITICAL', regex: /\b(AKIA|ASIA)[0-9A-Z]{16}\b/g },
     { type: 'ATLASSIAN_API_TOKEN', severity: 'CRITICAL', regex: /\bATATT3xFfGF0[A-Za-z0-9_=-]{20,}\b/g },
     { type: 'STRIPE_LIVE_SECRET', severity: 'CRITICAL', regex: /\bsk_live_[A-Za-z0-9]{16,}\b/g },
     { type: 'SLACK_TOKEN', severity: 'CRITICAL', regex: /\bxox[baprs]-[A-Za-z0-9-]{16,}\b/g },
-    { type: 'GITHUB_PAT', severity: 'CRITICAL', regex: /\b(ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{20,}\b/g },
+    { type: 'GITHUB_PAT', severity: 'CRITICAL', regex: /\b(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{20,}\b|\bgithub_pat_[A-Za-z0-9_]{22,}\b/g },
+    { type: 'CLOUDFLARE_OR_MODAL_TOKEN', severity: 'CRITICAL', regex: /\b(?:cfut_|ak-)[A-Za-z0-9_-]{20,}\b/g },
     { type: 'BEARER_JWT', severity: 'HIGH', regex: /\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b/g },
     { type: 'IBAN_FINANCIAL', severity: 'HIGH', regex: /\b[A-Z]{2}[0-9]{2}[A-Z0-9]{11,26}\b/g },
     { type: 'NID_OR_SSN', severity: 'HIGH', regex: /\b(?:NID|SSN|Passport)[\s:#-]*[A-Z0-9-]{7,17}\b/gi }
@@ -246,21 +250,30 @@ export function auditEngineeringPayload(rawText) {
     });
   }
 
-  const riskScore = Math.min(
-    100,
-    findings.reduce((sum, f) => sum + (f.severity === 'CRITICAL' ? 35 : f.severity === 'HIGH' ? 20 : 10), 0)
-  );
-
   const promptInjectionsBlocked = findings.filter((f) => f.category === 'PROMPT_INJECTION').length;
   const secretsBlocked = findings.filter((f) => f.category === 'SECRET_LEAK').length;
   const mobileRisksBlocked = findings.filter(
     (f) => f.category === 'PERMISSION_CHAIN' || f.category === 'IOS_PRIVACY_CHAIN'
   ).length;
 
+  const rawRiskScore = findings.reduce(
+    (sum, f) => sum + (f.severity === 'CRITICAL' ? 40 : f.severity === 'HIGH' ? 25 : 10),
+    0
+  );
+  const riskScore = Math.min(
+    100,
+    secretsBlocked > 0 || promptInjectionsBlocked > 0 ? Math.max(75, rawRiskScore) : rawRiskScore
+  );
+
   return {
-    engineVersion: '4.0.0',
+    engineVersion: '5.1.0',
     riskScore,
-    verdict: riskScore >= 70 ? 'BLOCK_AND_SANITIZE' : riskScore >= 30 ? 'REVIEW_REQUIRED' : 'CLEAN_PASS',
+    verdict:
+      secretsBlocked > 0 || promptInjectionsBlocked > 0 || riskScore >= 70
+        ? 'BLOCK_AND_SANITIZE'
+        : riskScore >= 30
+          ? 'REVIEW_REQUIRED'
+          : 'CLEAN_PASS',
     totalFindings: findings.length,
     promptInjectionsBlocked,
     secretsBlocked,
@@ -268,6 +281,84 @@ export function auditEngineeringPayload(rawText) {
     findings,
     redactedPayload: redacted,
     payloadSha256: crypto.createHash('sha256').update(redacted, 'utf8').digest('hex'),
+    thirdPartyCloudBytesSent: 0
+  };
+}
+
+/**
+ * Layer 5: Pre-Push Git & Public-Repo Boundary Auto-Heal Guard
+ * Intercepts staged files (.html, .js, .ts, .json, .md, .py, .env) before git commit/push,
+ * blocks private-to-public SPA root overwrites (_BUILTIN_FB / admin-engine.js), and returns
+ * ready-to-write auto-healed file contents with 0 external cloud egress.
+ */
+export function auditAndHealGitBundle(filesMap = {}, options = {}) {
+  const isPublicRepo = options.isPublicRepo !== false;
+  const cleanRedirectHtml =
+    options.cleanRedirectHtml ||
+    '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=https://agency.visionflowgroup.com/"><link rel="canonical" href="https://agency.visionflowgroup.com/"><title>Vision Flow Group</title></head><body><script>location.replace("https://agency.visionflowgroup.com/");</script></body></html>';
+
+  const fileReports = [];
+  const healedFiles = {};
+  let totalSecretsBlocked = 0;
+  let privateSpaLeaksHealed = 0;
+
+  for (const [filePath, rawContent] of Object.entries(filesMap || {})) {
+    const content = String(rawContent || '');
+    const normPath = String(filePath || '').replace(/\\/g, '/');
+    const isRootIndex = normPath === 'index.html' || normPath.endsWith('/index.html');
+    const hasPrivateSpaMarkers =
+      isPublicRepo &&
+      isRootIndex &&
+      (content.includes('_BUILTIN_FB') || content.includes('site/admin-engine.js'));
+
+    if (hasPrivateSpaMarkers) {
+      privateSpaLeaksHealed += 1;
+      const scan = auditEngineeringPayload(content);
+      totalSecretsBlocked += scan.secretsBlocked;
+      healedFiles[filePath] = cleanRedirectHtml;
+      fileReports.push({
+        filePath,
+        status: 'AUTO_HEALED_PRIVATE_SPA_OVERWRITE',
+        verdict: 'BLOCK_AND_SANITIZE',
+        secretsBlocked: scan.secretsBlocked,
+        findings: [
+          {
+            category: 'REPO_BOUNDARY_LEAK',
+            type: 'PRIVATE_SPA_TO_PUBLIC_PAGES_LEAK',
+            severity: 'CRITICAL',
+            detail:
+              'Private SPA index.html (_BUILTIN_FB / admin-engine.js) detected in public Pages target; auto-restored clean redirect index.html.'
+          },
+          ...scan.findings
+        ]
+      });
+    } else {
+      const scan = auditEngineeringPayload(content);
+      totalSecretsBlocked += scan.secretsBlocked;
+      healedFiles[filePath] = scan.secretsBlocked > 0 || scan.promptInjectionsBlocked > 0 ? scan.redactedPayload : content;
+      fileReports.push({
+        filePath,
+        status:
+          scan.secretsBlocked > 0 || scan.promptInjectionsBlocked > 0
+            ? 'AUTO_REDACTED_SECRETS'
+            : 'CLEAN_VERIFIED',
+        verdict: scan.verdict,
+        secretsBlocked: scan.secretsBlocked,
+        findings: scan.findings
+      });
+    }
+  }
+
+  const blocked = totalSecretsBlocked > 0 || privateSpaLeaksHealed > 0;
+  return {
+    protocol: 'SENTINELFORGE-PREPUSH-GIT-GUARD-V5.1',
+    allowPushWithoutHeal: !blocked,
+    verdict: blocked ? 'BLOCK_AND_AUTO_HEAL' : 'CLEAN_PASS',
+    totalFilesScanned: Object.keys(filesMap || {}).length,
+    totalSecretsBlocked,
+    privateSpaLeaksHealed,
+    fileReports,
+    healedFiles,
     thirdPartyCloudBytesSent: 0
   };
 }

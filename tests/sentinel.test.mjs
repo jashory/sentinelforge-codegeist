@@ -6,6 +6,7 @@ import { spawn } from 'node:child_process';
 import {
   RED_TEAM_SCENARIOS,
   appendAuditLedgerEntry,
+  auditAndHealGitBundle,
   auditEngineeringPayload,
   extractAdfText,
   stripHtmlToText,
@@ -161,11 +162,37 @@ test('Standalone v4.0/v5.0 5-Tool Atlassian MCP Gateway handles initialize, tool
   await new Promise((resolve) => child.on('close', resolve));
   assert.equal(replies.length, 4);
   assert.equal(replies[0].result.serverInfo.version, '4.0.0');
-  assert.equal(replies[1].result.tools.length, 5);
+  assert.equal(replies[1].result.tools.length, 6);
   const fwOut = JSON.parse(replies[2].result.content[0].text);
   assert.equal(fwOut.safeForLlm, false);
   assert.ok(fwOut.promptInjectionsBlocked >= 1);
   assert.equal(fwOut.thirdPartyCloudBytesSent, 0);
   const rtOut = JSON.parse(replies[3].result.content[0].text);
   assert.equal(rtOut.results.length, 4);
+});
+
+test('v5.1 Real-World Pre-Push Git Guard catches single Google/Firebase AIza key as BLOCK_AND_SANITIZE (never CLEAN_PASS) and auto-heals private SPA index.html overwrites', () => {
+  const sampleKey = 'AIzaSy' + 'D00000000000000000000000000EXAMPLE';
+  const singleLeak = `const _BUILTIN_FB = '{"apiKey":"${sampleKey}","authDomain":"visionflow-bd.firebaseapp.com"}';`;
+  const singleReport = auditEngineeringPayload(singleLeak);
+  assert.equal(singleReport.verdict, 'BLOCK_AND_SANITIZE', 'A single leaked Google API key must never return CLEAN_PASS');
+  assert.ok(singleReport.riskScore >= 75, `Expected riskScore >= 75 for single key leak, got ${singleReport.riskScore}`);
+  assert.ok(singleReport.findings.some((f) => f.type === 'GOOGLE_FIREBASE_API_KEY' && f.severity === 'CRITICAL'));
+  assert.ok(!singleReport.redactedPayload.includes(sampleKey));
+
+  const bundle = auditAndHealGitBundle(
+    {
+      'index.html': `<html><script src="site/admin-engine.js"><\/script><script>${singleLeak}<\/script></html>`,
+      'notes.md': `OPENAI_KEY=sk-proj-1234567890abcdefghijklmnop HF=hf_1234567890abcdefghijklmnop`
+    },
+    { isPublicRepo: true }
+  );
+  assert.equal(bundle.allowPushWithoutHeal, false);
+  assert.equal(bundle.verdict, 'BLOCK_AND_AUTO_HEAL');
+  assert.equal(bundle.privateSpaLeaksHealed, 1);
+  assert.ok(bundle.totalSecretsBlocked >= 3);
+  assert.ok(!bundle.healedFiles['index.html'].includes('_BUILTIN_FB'));
+  assert.ok(!bundle.healedFiles['index.html'].includes(sampleKey));
+  assert.ok(bundle.healedFiles['index.html'].includes('https://agency.visionflowgroup.com/'));
+  assert.ok(!bundle.healedFiles['notes.md'].includes('sk-proj-1234567890abcdefghijklmnop'));
 });
