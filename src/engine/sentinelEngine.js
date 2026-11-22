@@ -130,7 +130,7 @@ export function auditEngineeringPayload(rawText) {
   // Layer 2: Enterprise Credentials, Atlassian Tokens, Financial & Shannon-Entropy DLP
   const secretPatterns = [
     { type: 'PRIVATE_KEY_BLOCK', severity: 'CRITICAL', regex: /-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?-----END [A-Z ]*PRIVATE KEY-----/g },
-    { type: 'GOOGLE_FIREBASE_API_KEY', severity: 'CRITICAL', regex: /\bAIza[0-9A-Za-z_-]{35}\b/g },
+    { type: 'GOOGLE_FIREBASE_API_KEY', severity: 'CRITICAL', regex: /\bAIza[0-9A-Za-z_-]{33,40}\b/g },
     { type: 'OPENAI_ANTHROPIC_KEY', severity: 'CRITICAL', regex: /\bsk-(?:proj-|ant-|live_|test_)?[A-Za-z0-9_-]{20,}\b/g },
     { type: 'HUGGINGFACE_TOKEN', severity: 'CRITICAL', regex: /\bhf_[A-Za-z0-9]{20,}\b/g },
     { type: 'AWS_ACCESS_KEY', severity: 'CRITICAL', regex: /\b(AKIA|ASIA)[0-9A-Z]{16}\b/g },
