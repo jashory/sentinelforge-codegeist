@@ -1,8 +1,10 @@
 # SentinelForge v5.1 — Atlassian Teamwork Graph Blast-Radius, Pre-Push Git Guard, Autonomous Rovo Remediation & Zero-Leak Shield
 
+[![M8ven Score](https://m8ven.ai/badge/mcp/jashory-sentinelforge-codegeist-a8ynww)](https://m8ven.ai/mcp/jashory/sentinelforge-codegeist)
+
 > **Atlassian Codegeist 2026 — "Build with Context" (`Runs on Atlassian` Eligible — 0 External Cloud Egress)**  
 > **Team:** Vision Flow Group (MD SHIHABUDDIN, MD Rafiul Islam Shubho, MD Anisur Rahman, Sharmin)  
-> **Live Forge App ID:** `ari:cloud:ecosystem::app/dfccfe85-2f0a-4c82-9c88-c1dcf76cd975` | **Official Demo Video:** [https://youtu.be/mw0awiS9eP8](https://youtu.be/mw0awiS9eP8) | **MCP Skill Contract:** [`ATLASSIAN_MCP_SKILL.md`](./ATLASSIAN_MCP_SKILL.md)
+> **Live Forge App ID:** `ari:cloud:ecosystem::app/dfccfe85-2f0a-4c82-9c88-c1dcf76cd975` | **Official Demo Video:** [https://youtu.be/mw0awiS9eP8](https://youtu.be/mw0awiS9eP8) | **Independent M8ven Trust Index Audit:** [https://m8ven.ai/mcp/jashory/sentinelforge-codegeist](https://m8ven.ai/mcp/jashory/sentinelforge-codegeist) | **MCP Skill Contract:** [`ATLASSIAN_MCP_SKILL.md`](./ATLASSIAN_MCP_SKILL.md)
 
 ## 1-Click Atlassian Forge Production Installation (For Codegeist Judges)
 SentinelForge v5.1 is deployed to **Atlassian Forge Production (`Version 4 — Sharing Enabled`)** and runs 100% natively on Atlassian (`0 B` third-party egress):
@@ -10,13 +12,13 @@ SentinelForge v5.1 is deployed to **Atlassian Forge Production (`Version 4 — S
 - Once installed on any Jira/Confluence Cloud site, open **Apps -> SentinelForge Security Dashboard** or open any Jira issue panel and click **Run Autonomous Rovo Remediation** or **Fire Cloud Key Leak** for 1-click zero-setup testing.
 
 ## Live Production Screenshots (`jashory.atlassian.net`)
-| Jira Issue `KAN-1` Teamwork Graph (`v5.0`) | Jira Global Executive Security Dashboard (`v5.0`) |
+| Jira Issue `KAN-1` Teamwork Graph (`v5.1`) | Jira Global Executive Security Dashboard (`v5.1`) |
 | :---: | :---: |
-| ![Jira KAN-1 v5.0](./screenshots/01_v5_live_jira_kan1_teamwork_graph.jpg) | ![Executive Dashboard v5.0](./screenshots/02_v5_live_jira_executive_dashboard.jpg) |
+| ![Jira KAN-1 v5.1](./screenshots/01_v5_live_jira_kan1_teamwork_graph.jpg) | ![Executive Dashboard v5.1](./screenshots/02_v5_live_jira_executive_dashboard.jpg) |
 | **1-Click Autonomous Rovo Containment (`KAN-2`)** | **Auto-Created Security Incident Ticket (`KAN-2`)** |
 | ![Auto Remediated](./screenshots/03_v5_live_auto_remediated_incident.jpg) | ![KAN-2 Ticket](./screenshots/04_v5_live_kan2_created_ticket.jpg) |
 
-## Why SentinelForge v5.0 Solves "Build with Context"
+## Why SentinelForge v5.1 Solves "Build with Context"
 A leaked credential or indirect LLM prompt injection inside a single Jira issue rarely stays isolated. Engineers copy runbooks into Confluence, reference credentials in CI tickets, and expose Rovo or MCP AI agents across the entire workspace.
 
 **SentinelForge v5.1** upgrades passive ticket scanning into an **active, context-aware Atlassian Teamwork Graph security engine** running 100% natively on Atlassian Forge (`0` bytes external egress):
